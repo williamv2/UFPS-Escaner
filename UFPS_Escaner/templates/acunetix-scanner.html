@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+{% block css %}
+{% endblock %}
+{% block content %}
+<main class="app-content">
+    <div class="app-title">
+        <div>
+            <h1><i class="fa fa-th-list"></i>&nbsp;Escaner Vulnerabilidades</h1>
+            <p>Escaner de vulnerabilidades: Seguridad de aplicaciones web</p>
+        </div>
+        <ul class="app-breadcrumb breadcrumb side">
+            <li class="breadcrumb-item"><i class="fa fa-home fa-lg"></i></li>
+            <li class="breadcrumb-item">Inicio</li>
+            <li class="breadcrumb-item active"><a href="#">Escaner Vulnerabilidades</a></li>
+        </ul>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="tile">
+                <div class="tile-body">
+                    <div id="sampleTable_wrapper" class="dataTables_wrapper container-fluid dt-bootstrap4 no-footer">
+                        <div class="row"><div class="col-sm-12 col-md-6">
+                            <div class="dataTables_length" id="sampleTable_length">
+                                <a class="btn btn-primary" href="#" data-target="#newScan" data-toggle="modal" title="New Scan">
+                                    <i class="fa fa-gitlab fa-lg"></i> Nuevo Escaner</a>
+                                <br>
+                                <br>
+                            </div>
+                        </div>
+                        </div>
+
+                        <table class="table table-hover table-bordered" id="sampleTable">
+                            <thead>
+                            <tr class="text-center">
+                                <th>Nombre</th>
+                                <th>Tipo</th>
+                                <th>Objetivo</th>
+                                <th>Descripcion</th>
+                                <th>Fecha</th>
+                                <th>Gestionar</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for i in acunetix_task %}
+                                <tr class="text-center">
+                                    <td>
+                                        <a href="#" target="view_window">{{ i['task_name'] }}</a>
+                                    </td>
+                                    {% if i['scan_type'] == '0' %}
+                                        <td>Full Scan</td>
+                                    {% elif i['scan_type'] == '1' %}
+                                        <td>High Risk Vulnerabilities</td>
+                                    {% elif i['scan_type'] == '2' %}
+                                        <td>Cross-site Scripting Vulnerabilities</td>
+                                    {% elif i['scan_type'] == '3' %}
+                                        <td>SQL Injection Vulnerabilities</td>
+                                    {% elif i['scan_type'] == '4' %}
+                                        <td>Weak Passwords</td>
+                                    {% elif i['scan_type'] == '5' %}
+                                        <td>Crawl Only</td>
+                                    {% endif %}
+                                    <td>{{ i['target_list'] | join(',') | truncate(20 , True)}}...</td>
+                                    <td>{{ i['description'] }}</td>
+                                    <td>{{ i['date'] }}</td>
+                                    <td class="text-center">
+                                        <div class="hidden-sm hidden-xs action-buttons">
+                                            <a onclick="down_report('{{ i['_id'] }}')"  role="button" data-target="#downloadReport" data-toggle="modal" href="#" title="Download Report">
+                                                <i class="fa fa-download"></i>
+                                            </a>
+                                            &nbsp;
+                                            &nbsp;
+                                            <a role="button" href="#" onclick="delete_task('{{ i['_id'] }}')" title="Delete">
+                                                <i class="fa fa-trash-o"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+
+                        <div class="modal" id="downloadReport" >
+                            <div class="modal-dialog" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Descargar Reportet</h5>
+                                        <button class="close" type="button" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+                                    </div>
+
+                                    <div class="modal-body">
+                                        <form class="form-group row">
+                                            <div class="col-md-2"></div>
+                                            <div class="col-md-4" id="report_download_html">
+                                                <p>Generando...</p>
+                                            </div>
+                                            <div class="col-md-4" id="report_download_pdf">
+                                                {# <p>Por Favor, espera...</p>#}
+                                            </div>
+                                            <div class="col-md-2"></div>
+                                        </form>
+
+                                        <div class="modal-footer">
+                                            <p class="text-muted">
+                                                Si la página de descarga devuelve 'No encontrado (404)', espere unos segundos para actualizar la página de descarga</p>
+                                            <button class="btn default " type="button" data-dismiss="modal">Close</button>
+                                        </div>
+                                    </div>
+                                </div><!-- /.modal-content -->
+                            </div><!-- /.modal-dialog -->
+                        </div><!-- /.modal -->
+
+                        <div class="modal" id="newScan" >
+                            <div class="modal-dialog" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Nuevo Escaner</h5>
+                                        <button class="close" type="button" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <form class="form-horizontal" role="form">
+                                            <div class="form-group">
+                                                <label class="control-label no-padding-right">Nombre de la Tarea <span class="text-danger">*</span></label>
+                                                <div>
+                                                    <input type="text" class="form-control" id="task_name" name="task_name" placeholder="">
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label class="control-label no-padding-right">Objetivo <span class="text-danger">*</span></label>
+                                                <div>
+                                                    <textarea class="form-control" id="target_addr" name="target_addr" rows="4" placeholder="One url per line:&#13;&#10;http://example.com&#13;&#10;http://example.com"></textarea>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label class="control-label no-padding-right">Tipo de Escaner <span class="text-danger">*</span></label>
+                                                <div >
+                                                    <select class="form-control col-md-7" id="scan_type" title="Scan Type" name="scan_type">
+                                                        <option value="0">Escaner Completo</option>
+                                                        <option value="1">Vulnerabilidades de alto riesgo</option>
+                                                        <option value="2">Vulnerabilidades de secuencias de comandos entre sitios</option>
+                                                        <option value="3">Vulnerabilidades de inyección de SQL</option>
+                                                        <option value="4">Contraseñas débiles</option>
+                                                        <option value="5">Sólo rastreo</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <div class="hr hr-16 hr-dotted"></div>
+                                            <div class="form-group">
+                                                <label class="control-label no-padding-right">Descripcion </label>
+                                                <div>
+                                                    <input type="text" class="form-control" id="description_val" name="description_val" placeholder="">
+                                                </div>
+                                            </div>
+
+                                        </form>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary"  data-dismiss="modal" aria-hidden="true">Cancelar
+                                        </button>
+                                        <button class="btn btn-primary new-scan" type="button">
+                                            <span>Bueno</span>
+                                        </button>
+                                    </div>
+                                </div><!-- /.modal-content -->
+                            </div><!-- /.modal-dialog -->
+                        </div><!-- /.modal -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+{% endblock %}
+{% block js %}
+    <!-- Data table plugin-->
+    <script type="text/javascript" src="static/js/plugins/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="static/js/plugins/dataTables.bootstrap.min.js"></script>
+    <script src="static/js/plugins/sweetalert/sweetalert.min.js"></script>
+    <script src="static/js/server/acunetix-scanner.js"></script>
+{% endblock %}
